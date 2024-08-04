@@ -1,9 +1,14 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
-    style::palette::{material, tailwind::{STONE, ROSE, FUCHSIA }},
-    style::{Color, Style},
+    style::{
+        palette::{
+            material::{BLUE_GRAY, PINK},
+            tailwind::{FUCHSIA, PURPLE, ROSE, SLATE, STONE},
+        },
+        Color, Style, Stylize,
+    },
     text::Text,
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
@@ -36,6 +41,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let menu_block = Block::default()
         .borders(Borders::ALL)
+        .border_style(SLATE.c900)
+        .border_type(BorderType::QuadrantOutside)
         .style(Style::new().bg(BACKGROUND));
 
     let menu =
@@ -149,16 +156,31 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .borders(Borders::ALL)
         .style(Style::new().bg(BACKGROUND));
 
-    let search_bar = Paragraph::new(Text::styled(
-        "Search Bar",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(search_bar_block);
+    let search_bar = Paragraph::new(Text::styled("Search Bar", Style::default().fg(TEXT_COLOR)))
+        .block(search_bar_block);
 
-    let ep_list_block = Block::default()
+    let ep_list_block = Block::bordered()
+        .title_top("Episode List")
+        .title_alignment(Alignment::Center)
+        .title_style(Style::new().underline_color(ROSE.c800))
         .borders(Borders::ALL)
         .style(Style::new().bg(BACKGROUND));
 
+    let mut episode_list_items: Vec<ListItem> = Vec::new();
+
+    for ep in &app.episodes {
+        let ep_list_item = ListItem::new(ep.title.clone())
+            .style(Style::default().bg(BLUE_GRAY.c900).fg(PINK.a100));
+        episode_list_items.push(ep_list_item);
+    }
+    let episode_list = List::new(episode_list_items).block(
+        Block::bordered()
+            .title_top("Episode List")
+            .title_alignment(Alignment::Center)
+            .title_style(Style::new())
+            .borders(Borders::ALL)
+            .style(Style::new().bg(BACKGROUND)),
+    );
     let ep_list = Paragraph::new(Text::styled(
         "Episode List",
         Style::default().fg(TEXT_COLOR),

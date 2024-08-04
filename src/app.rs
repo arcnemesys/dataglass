@@ -1,19 +1,24 @@
 use ratatui::widgets::ListState;
 use reqwest::get;
 use rss::Channel;
-use std::error::Error;
-
-pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
+use std::{error::Error, io::Read, num::NonZeroUsize, result::Result};
+use stream_download::{
+    http::{reqwest::Client, HttpStream},
+    source::SourceStream,
+    storage::{bounded::BoundedStorageProvider, memory::MemoryStorageProvider, StorageProvider},
+    Settings, StreamDownload, StreamState,
+};
+pub type AppResult<T> = Result<T, Box<dyn Error>>;
 
 #[derive(Debug)]
-struct Episode {
-    title: String,
-    audio_url: String,
-    author: String,
-    duration: String,
-    key_words: String,
-    pub_date: String,
-    link: String,
+pub struct Episode {
+    pub title: String,
+    pub audio_url: String,
+    pub author: String,
+    pub duration: String,
+    pub key_words: String,
+    pub pub_date: String,
+    pub link: String,
 }
 
 #[derive(Debug)]
@@ -23,7 +28,7 @@ pub struct App {
     pub playback_state: PlaybackState,
     pub list_state: Option<ListState>,
     pub running: bool,
-    // sink:
+    pub storage: BoundedStorageProvider<MemoryStorageProvider>, // sink:
 }
 
 impl App {
@@ -34,6 +39,10 @@ impl App {
             playback_state: PlaybackState::Stopped,
             list_state: None,
             running: true,
+            storage: BoundedStorageProvider::new(
+                MemoryStorageProvider,
+                NonZeroUsize::new(512 * 1024).unwrap(),
+            ),
         }
     }
     pub fn quit(&mut self) {
@@ -43,16 +52,15 @@ impl App {
     pub async fn music_for_programming(&mut self) -> Result<(), Box<dyn Error>> {
         let url = "https://musicforprogramming.net/rss.xml";
         let response = get(url).await.unwrap();
-    
+
         if response.status().is_success() {
             let content = response.text().await?;
             let channel = Channel::read_from(content.as_bytes())?;
-    
+
             println!("Title: {}", channel.title());
             println!("Description: {}", channel.description());
-    
+
             for item in channel.items() {
-    
                 let title = item.title().unwrap().to_owned();
                 let audio_url = item.comments().unwrap().to_owned();
                 let itunes_ext = item.itunes_ext().unwrap().to_owned();
@@ -68,7 +76,7 @@ impl App {
                     duration: duration.to_owned(),
                     key_words: keywords.to_owned(),
                     pub_date,
-                    link
+                    link,
                 };
                 self.episodes.push(episode);
                 println!("Item: {}", item.title().unwrap_or_default());
@@ -91,7 +99,7 @@ impl App {
         } else {
             println!("Failed to fetch the RSS feed: HTTP {}", response.status());
         }
-    
+
         Ok(())
     }
 }
@@ -129,7 +137,6 @@ pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
         println!("Description: {}", channel.description());
 
         for item in channel.items() {
-
             let title = item.title().unwrap().to_owned();
             let audio_url = item.comments().unwrap().to_owned();
             let itunes_ext = item.itunes_ext().unwrap().to_owned();
@@ -145,7 +152,7 @@ pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
                 duration: duration.to_owned(),
                 key_words: keywords.to_owned(),
                 pub_date,
-                link
+                link,
             };
             println!("Item: {}", item.title().unwrap_or_default());
             println!("\n");
