@@ -1,14 +1,14 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
-    style::palette::{material, tailwind::Stone},
+    style::palette::{material, tailwind::{STONE, ROSE, FUCHSIA }},
     style::{Color, Style},
     text::Text,
     widgets::{Block, BorderType, Borders, Paragraph},
     Frame,
 };
 
-const BACKGROUND: Color = STONE.c700;
-
+const BACKGROUND: Color = STONE.c400;
+const TEXT_COLOR: Color = ROSE.c800;
 use crate::app::App;
 
 pub fn render(app: &mut App, frame: &mut Frame) {
@@ -39,7 +39,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .style(Style::new().bg(BACKGROUND));
 
     let menu =
-        Paragraph::new(Text::styled("MENU", Style::default().fg(Color::Cyan))).block(menu_block);
+        Paragraph::new(Text::styled("MENU", Style::default().fg(TEXT_COLOR))).block(menu_block);
 
     let open_playlist_block = Block::default()
         .borders(Borders::ALL)
@@ -47,7 +47,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let open_playlist = Paragraph::new(Text::styled(
         "OPEN PLAYLIST",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(open_playlist_block);
 
@@ -57,7 +57,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let save_to_playlist = Paragraph::new(Text::styled(
         "SAVE TO PLAYLIST",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(save_to_playlist_block);
 
@@ -67,7 +67,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let remove_from_playlist = Paragraph::new(Text::styled(
         "REMOVE FROM PLAYLIST",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(remove_from_playlist_block);
 
@@ -77,7 +77,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let change_theme = Paragraph::new(Text::styled(
         "Change Theme",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(change_theme_block);
 
@@ -87,7 +87,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let about_mfp = Paragraph::new(Text::styled(
         "musicForProgramming About",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(about_mfp_block);
 
@@ -97,7 +97,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let mfp_credits = Paragraph::new(Text::styled(
         "musicForProgramming Credits",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(mfp_credits_block);
 
@@ -116,7 +116,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let ep_title = Paragraph::new(Text::styled(
         "Episode Title",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(ep_title_block);
 
@@ -126,7 +126,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let ep_info = Paragraph::new(Text::styled(
         "Episode Information",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(ep_info_block);
 
@@ -136,7 +136,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let play_status_bar = Paragraph::new(Text::styled(
         "Play Status Bar",
-        Style::default().fg(Color::Cyan),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(play_status_bar_block);
 
@@ -151,7 +151,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let search_bar = Paragraph::new(Text::styled(
         "Search Bar",
-        Style::default().fg(Color::Green),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(search_bar_block);
 
@@ -161,7 +161,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let ep_list = Paragraph::new(Text::styled(
         "Episode List",
-        Style::default().fg(Color::Green),
+        Style::default().fg(TEXT_COLOR),
     ))
     .block(ep_list_block);
 

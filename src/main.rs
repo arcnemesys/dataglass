@@ -12,9 +12,9 @@ use std::collections::VecDeque;
 use std::error::Error;
 use std::io;
 use std::io::BufReader;
-const MFP_FEED: &str = "https://musicforprogramming.net/rss.xml";
 
-pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
+
+pub async fn music_for_programming_test() -> Result<(), Box<dyn Error>> {
     let url = "https://musicforprogramming.net/rss.xml";
     let response = get(url).await.unwrap();
 
@@ -26,7 +26,11 @@ pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
         println!("Description: {}", channel.description());
 
         for item in channel.items() {
-            // let episode =
+
+            let title = item.title().unwrap().to_owned();
+            // let episode = Episode {
+            //     title,
+            // }
             println!("Item: {}", item.title().unwrap_or_default());
             println!("\n");
             println!("Item Categories: {:?}", item.categories());
@@ -50,32 +54,31 @@ pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // let _ = music_for_programming().await.unwrap();
+    let _ = music_for_programming_test().await.unwrap();
 
-    let mut app = App::new();
+    // let mut app = App::new();
 
-    let backend = CrosstermBackend::new(io::stderr());
-    let terminal = Terminal::new(backend)?;
-    let events = EventHandler::new(250);
-    let mut tui = Tui::new(terminal, events);
-    tui.init()?;
+    // let backend = CrosstermBackend::new(io::stderr());
+    // let terminal = Terminal::new(backend)?;
+    // let events = EventHandler::new(250);
+    // let mut tui = Tui::new(terminal, events);
+    // tui.init()?;
 
-    // Start the main loop.
-    while app.running {
-        // Render the user interface.
-        tui.draw(&mut app)?;
-        // Handle events.
-        match tui.events.next()? {
-            Event::Key(key_event) => handle_key_events(key_event, &mut app)?,
-            Event::Mouse(_) => {}
-            Event::Resize(_, _) => {}
-        }
-    }
+    // // Start the main loop.
+    // while app.running {
+    //     // Render the user interface.
+    //     tui.draw(&mut app)?;
+    //     // Handle events.
+    //     match tui.events.next()? {
+    //         Event::Key(key_event) => handle_key_events(key_event, &mut app)?,
+    //         Event::Mouse(_) => {}
+    //         Event::Resize(_, _) => {}
+    //     }
+    // }
 
-    // Exit the user interface.
-    tui.exit()?;
+    // // Exit the user interface.
+    // tui.exit()?;
     Ok(())
 }
