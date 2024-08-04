@@ -15,7 +15,7 @@ struct Episode {
 }
 
 #[derive(Debug)]
-struct Dataglass {
+struct App {
     playlist: Vec<Episode>,
     current_track: Option<Episode>,
     playback_state: PlaybackState,

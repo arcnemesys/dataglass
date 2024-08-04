@@ -1,11 +1,11 @@
 use reqwest::get;
 // use rodio::{source::Source, Decoder, OutputStream, Sink};
+use dataglass::app::App;
 use rss::Channel;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::error::Error;
 use std::io::BufReader;
-
 const MFP_FEED: &str = "https://musicforprogramming.net/rss.xml";
 
 pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
