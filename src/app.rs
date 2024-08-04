@@ -1,4 +1,5 @@
 use ratatui::widgets::ListState;
+use std::error::Error;
 
 pub type AppResult<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -15,12 +16,28 @@ struct Episode {
 }
 
 #[derive(Debug)]
-struct App {
-    playlist: Vec<Episode>,
-    current_track: Option<Episode>,
-    playback_state: PlaybackState,
-    list_state: ListState,
+pub struct App {
+    pub playlist: Option<Vec<Episode>>,
+    pub current_track: Option<Episode>,
+    pub playback_state: PlaybackState,
+    pub list_state: Option<ListState>,
+    pub running: bool,
     // sink:
+}
+
+impl App {
+    pub fn new() -> Self {
+        Self {
+            playlist: None,
+            current_track: None,
+            playback_state: PlaybackState::Stopped,
+            list_state: None,
+            running: true,
+        }
+    }
+    pub fn quit(&mut self) {
+        self.running = false;
+    }
 }
 
 #[derive(Debug)]
