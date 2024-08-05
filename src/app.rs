@@ -48,60 +48,6 @@ impl App {
     pub fn quit(&mut self) {
         self.running = false;
     }
-
-    pub async fn music_for_programming(&mut self) -> Result<(), Box<dyn Error>> {
-        let url = "https://musicforprogramming.net/rss.xml";
-        let response = get(url).await.unwrap();
-
-        if response.status().is_success() {
-            let content = response.text().await?;
-            let channel = Channel::read_from(content.as_bytes())?;
-
-            println!("Title: {}", channel.title());
-            println!("Description: {}", channel.description());
-
-            for item in channel.items() {
-                let title = item.title().unwrap().to_owned();
-                let audio_url = item.comments().unwrap().to_owned();
-                let itunes_ext = item.itunes_ext().unwrap().to_owned();
-                let author = &itunes_ext.author.unwrap().clone();
-                let duration = &itunes_ext.duration.unwrap();
-                let keywords = &itunes_ext.keywords.unwrap();
-                let pub_date = item.pub_date().unwrap().to_owned();
-                let link = item.clone().link.unwrap();
-                let episode = Episode {
-                    title,
-                    audio_url,
-                    author: author.to_owned(),
-                    duration: duration.to_owned(),
-                    key_words: keywords.to_owned(),
-                    pub_date,
-                    link,
-                };
-                self.episodes.push(episode);
-                println!("Item: {}", item.title().unwrap_or_default());
-                println!("\n");
-                println!("Item Categories: {:?}", item.categories());
-                println!("\n");
-                println!("Item Comments: {:?}", item.comments().unwrap());
-                println!("\n");
-                // println!("Item Content: {:?}", item.content().unwrap());
-                println!("\n");
-                println!("Item ItunesExt {:?}", item.itunes_ext().unwrap());
-                println!("\n");
-                println!("Item Pub date: {:?}", item.pub_date());
-                println!("\n");
-                println!("Link: {}", item.link().unwrap_or_default());
-                println!("\n");
-                println!("Description: {}", item.description().unwrap_or_default());
-                println!("------");
-            }
-        } else {
-            println!("Failed to fetch the RSS feed: HTTP {}", response.status());
-        }
-
-        Ok(())
-    }
 }
 
 #[derive(Debug)]
@@ -125,16 +71,14 @@ enum Message {
 
 const MFP_FEED: &str = "https://musicforprogramming.net/rss.xml";
 
-pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
+pub async fn music_for_programming() -> Result<Vec<Episode>, Box<dyn Error>> {
     let url = "https://musicforprogramming.net/rss.xml";
     let response = get(url).await.unwrap();
+    let mut episodes = Vec::new();
 
     if response.status().is_success() {
         let content = response.text().await?;
         let channel = Channel::read_from(content.as_bytes())?;
-
-        println!("Title: {}", channel.title());
-        println!("Description: {}", channel.description());
 
         for item in channel.items() {
             let title = item.title().unwrap().to_owned();
@@ -154,26 +98,11 @@ pub async fn music_for_programming() -> Result<(), Box<dyn Error>> {
                 pub_date,
                 link,
             };
-            println!("Item: {}", item.title().unwrap_or_default());
-            println!("\n");
-            println!("Item Categories: {:?}", item.categories());
-            println!("\n");
-            println!("Item Comments: {:?}", item.comments().unwrap());
-            println!("\n");
-            // println!("Item Content: {:?}", item.content().unwrap());
-            println!("\n");
-            println!("Item ItunesExt {:?}", item.itunes_ext().unwrap());
-            println!("\n");
-            println!("Item Pub date: {:?}", item.pub_date());
-            println!("\n");
-            println!("Link: {}", item.link().unwrap_or_default());
-            println!("\n");
-            println!("Description: {}", item.description().unwrap_or_default());
-            println!("------");
+            episodes.push(episode);
         }
     } else {
         println!("Failed to fetch the RSS feed: HTTP {}", response.status());
     }
 
-    Ok(())
+    Ok(episodes)
 }

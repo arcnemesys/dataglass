@@ -166,27 +166,27 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .borders(Borders::ALL)
         .style(Style::new().bg(BACKGROUND));
 
-    let mut episode_list_items: Vec<ListItem> = Vec::new();
+    let mut episode_list_items: Vec<_> = Vec::new();
 
     for ep in &app.episodes {
-        let ep_list_item = ListItem::new(ep.title.clone())
-            .style(Style::default().bg(BLUE_GRAY.c900).fg(PINK.a100));
+        let ep_list_item = Text::from(ep.title.clone());
         episode_list_items.push(ep_list_item);
     }
-    let episode_list = List::new(episode_list_items).block(
-        Block::bordered()
-            .title_top("Episode List")
-            .title_alignment(Alignment::Center)
-            .title_style(Style::new())
-            .borders(Borders::ALL)
-            .style(Style::new().bg(BACKGROUND)),
-    );
-    let ep_list = Paragraph::new(Text::styled(
-        "Episode List",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(ep_list_block);
 
+    // let episode_list_block = Block::bordered()
+    //     .title_top("Episode List")
+    //     .title_alignment(Alignment::Center)
+    //     .title_style(Style::new())
+    //     .borders(Borders::ALL)
+    //     .style(Style::new().bg(BACKGROUND));
+
+    // let ep_list = Paragraph::new(Text::styled(
+    //     "Episode List",
+    //     Style::default().fg(TEXT_COLOR),
+    // ))
+    // .block(ep_list_block);
+
+    let episode_list = List::new(episode_list_items).block(ep_list_block);
     frame.render_widget(menu, left_layout[0]);
     frame.render_widget(open_playlist, left_layout[1]);
     frame.render_widget(save_to_playlist, left_layout[2]);
@@ -198,7 +198,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     frame.render_widget(ep_info, middle_layout[1]);
     frame.render_widget(play_status_bar, middle_layout[2]);
     frame.render_widget(search_bar, right_layout[0]);
-    frame.render_widget(ep_list, right_layout[1]);
+    frame.render_widget(episode_list, right_layout[1]);
 
     // frame.render_widget(composed_commit, inner_right_layout[0]);
     // frame.render_widget(interaction_panel, inner_right_layout[1]);
