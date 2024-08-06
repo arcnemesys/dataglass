@@ -14,6 +14,18 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.quit();
             }
         }
+        KeyCode::Up => {
+            if app.selected_episode > 0 {
+                app.selected_episode -= 1;
+                app.list_state.select(Some(app.selected_episode));
+            }
+        }
+        KeyCode::Down => {
+            if app.selected_episode < app.episodes.len() - 1 {
+                app.selected_episode += 1;
+                app.list_state.select(Some(app.selected_episode));
+            }
+        }
         // Counter handlers
         KeyCode::Right => {}
         KeyCode::Left => {}

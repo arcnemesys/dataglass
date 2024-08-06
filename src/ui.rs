@@ -7,6 +7,7 @@ use ratatui::{
         },
         Color, Style, Stylize,
     },
+    symbols::border::ROUNDED,
     text::Text,
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
     Frame,
@@ -21,8 +22,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .direction(ratatui::layout::Direction::Horizontal)
         .constraints([
             Constraint::Percentage(30),
-            Constraint::Percentage(40),
-            Constraint::Percentage(30),
+            Constraint::Percentage(38),
+            Constraint::Percentage(32),
         ])
         .split(frame.size());
 
@@ -120,19 +121,20 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let ep_title_block = Block::default()
         .borders(Borders::ALL)
         .style(Style::new().bg(BACKGROUND));
-
-    let ep_title = Paragraph::new(Text::styled(
-        "Episode Title",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(ep_title_block);
+    let episode_title = app.episodes[app.selected_episode].title.clone();
+    let ep_title = Paragraph::new(Text::styled(episode_title, Style::default().fg(TEXT_COLOR)))
+        .block(ep_title_block);
 
     let ep_info_block = Block::default()
         .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
         .style(Style::new().bg(BACKGROUND));
-
+    let episode_information = format!(
+        "Duration: {}\nRelease Date: {}",
+        app.episodes[app.selected_episode].duration.clone(),
+        app.episodes[app.selected_episode].pub_date.clone(),
+    );
     let ep_info = Paragraph::new(Text::styled(
-        "Episode Information",
+        episode_information,
         Style::default().fg(TEXT_COLOR),
     ))
     .block(ep_info_block);
@@ -153,6 +155,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .split(outer_layout[2]);
 
     let search_bar_block = Block::default()
+        .title_top("Search Bar")
+        .title_alignment(Alignment::Center)
         .borders(Borders::ALL)
         .style(Style::new().bg(BACKGROUND));
 
@@ -162,18 +166,26 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let ep_list_block = Block::bordered()
         .title_top("Episode List")
         .title_alignment(Alignment::Center)
-        .title_style(Style::new().underline_color(ROSE.c800))
+        .title_style(Style::new().fg(ROSE.c800))
+        .border_set(ROUNDED)
         .borders(Borders::TOP | Borders::RIGHT | Borders::BOTTOM)
         .style(Style::new().bg(BACKGROUND));
 
     let mut episode_list_items: Vec<_> = Vec::new();
 
     for ep in &app.episodes {
-        let ep_list_item = Text::from(ep.title.clone());
+        let ep_list_item = ListItem::new(Text::from(ep.title.clone()));
         episode_list_items.push(ep_list_item);
     }
 
-    let episode_list = List::new(episode_list_items).block(ep_list_block);
+    let episode_list = List::new(episode_list_items)
+        .block(ep_list_block)
+        .highlight_symbol(">>")
+        .highlight_style(
+            Style::default()
+                .fg(Color::Rgb(185, 185, 220))
+                .bg(Color::Rgb(28, 13, 41)),
+        );
     frame.render_widget(menu, left_layout[0]);
     frame.render_widget(open_playlist, left_layout[1]);
     frame.render_widget(save_to_playlist, left_layout[2]);
@@ -185,7 +197,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     frame.render_widget(ep_info, middle_layout[1]);
     frame.render_widget(play_status_bar, middle_layout[2]);
     frame.render_widget(search_bar, right_layout[0]);
-    frame.render_widget(episode_list, right_layout[1]);
+    frame.render_stateful_widget(episode_list, right_layout[1], &mut app.list_state);
 
     // frame.render_widget(composed_commit, inner_right_layout[0]);
     // frame.render_widget(interaction_panel, inner_right_layout[1]);

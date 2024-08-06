@@ -26,18 +26,22 @@ pub struct App {
     pub episodes: Vec<Episode>,
     pub current_track: Option<Episode>,
     pub playback_state: PlaybackState,
-    pub list_state: Option<ListState>,
+    pub list_state: ListState,
+    pub selected_episode: usize,
     pub running: bool,
     pub storage: BoundedStorageProvider<MemoryStorageProvider>, // sink:
 }
 
 impl App {
     pub fn new() -> Self {
+        let mut episode_list_state = ListState::default();
+        episode_list_state.select(Some(0));
         Self {
             episodes: Vec::new(),
             current_track: None,
+            selected_episode: 0,
             playback_state: PlaybackState::Stopped,
-            list_state: None,
+            list_state: episode_list_state,
             running: true,
             storage: BoundedStorageProvider::new(
                 MemoryStorageProvider,
@@ -48,6 +52,10 @@ impl App {
     pub fn quit(&mut self) {
         self.running = false;
     }
+
+    // pub fn select_episode(&mut self) {
+
+    // }
 }
 
 #[derive(Debug)]
