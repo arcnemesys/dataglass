@@ -128,7 +128,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     .block(ep_title_block);
 
     let ep_info_block = Block::default()
-        .borders(Borders::ALL)
+        .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
         .style(Style::new().bg(BACKGROUND));
 
     let ep_info = Paragraph::new(Text::styled(
@@ -163,7 +163,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .title_top("Episode List")
         .title_alignment(Alignment::Center)
         .title_style(Style::new().underline_color(ROSE.c800))
-        .borders(Borders::ALL)
+        .borders(Borders::TOP | Borders::RIGHT | Borders::BOTTOM)
         .style(Style::new().bg(BACKGROUND));
 
     let mut episode_list_items: Vec<_> = Vec::new();
@@ -172,19 +172,6 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         let ep_list_item = Text::from(ep.title.clone());
         episode_list_items.push(ep_list_item);
     }
-
-    // let episode_list_block = Block::bordered()
-    //     .title_top("Episode List")
-    //     .title_alignment(Alignment::Center)
-    //     .title_style(Style::new())
-    //     .borders(Borders::ALL)
-    //     .style(Style::new().bg(BACKGROUND));
-
-    // let ep_list = Paragraph::new(Text::styled(
-    //     "Episode List",
-    //     Style::default().fg(TEXT_COLOR),
-    // ))
-    // .block(ep_list_block);
 
     let episode_list = List::new(episode_list_items).block(ep_list_block);
     frame.render_widget(menu, left_layout[0]);
