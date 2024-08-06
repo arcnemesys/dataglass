@@ -1,4 +1,6 @@
+use crate::theme::THEME;
 use ratatui::{
+    buffer::Buffer,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{
         palette::{
@@ -8,8 +10,9 @@ use ratatui::{
         Color, Style, Stylize,
     },
     symbols::border::ROUNDED,
+    text::Span,
     text::Text,
-    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph, Wrap},
     Frame,
 };
 
@@ -31,82 +34,95 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
             Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(10),
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
+            Constraint::Percentage(9), // -1
+            Constraint::Percentage(9), // -1
+            Constraint::Percentage(9), // -1
+            Constraint::Percentage(9), // -1
+            Constraint::Percentage(27),
+            Constraint::Percentage(27),
         ])
         .split(outer_layout[0]);
 
     let menu_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(SLATE.c900)
-        .border_type(BorderType::QuadrantOutside)
-        .style(Style::new().bg(BACKGROUND));
+        .title_top("MENU")
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
+        .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
+        .style(Style::default().fg(TEXT_COLOR));
 
-    let menu =
-        Paragraph::new(Text::styled("MENU", Style::default().fg(TEXT_COLOR))).block(menu_block);
+    let menu = Paragraph::new(Text::styled("", TEXT_COLOR)).block(menu_block);
 
     let open_playlist_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
+        .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+        .title_top("Open Playlist")
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
+        .style(Style::default().fg(TEXT_COLOR));
 
-    let open_playlist = Paragraph::new(Text::styled(
-        "OPEN PLAYLIST",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(open_playlist_block);
+    let open_playlist = Paragraph::new(Text::styled("", TEXT_COLOR)).block(open_playlist_block);
 
     let save_to_playlist_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
+        .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+        .title_top("Save To Playlist")
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
+        .style(Style::default().fg(TEXT_COLOR));
 
-    let save_to_playlist = Paragraph::new(Text::styled(
-        "SAVE TO PLAYLIST",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(save_to_playlist_block);
+    let save_to_playlist = Paragraph::new(Text::styled("", Style::default().fg(TEXT_COLOR)))
+        .block(save_to_playlist_block);
 
     let remove_from_playlist_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
-
-    let remove_from_playlist = Paragraph::new(Text::styled(
-        "REMOVE FROM PLAYLIST",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(remove_from_playlist_block);
+        .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+        .title_top("Remove From Playlist")
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
+        .style(Style::default().fg(TEXT_COLOR));
+    let remove_from_playlist = Paragraph::new(Text::styled("", Style::default().fg(TEXT_COLOR)))
+        .block(remove_from_playlist_block);
 
     let change_theme_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
+        .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+        .title_top("Change Theme")
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
+        .style(Style::default().fg(TEXT_COLOR));
 
-    let change_theme = Paragraph::new(Text::styled(
-        "Change Theme",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(change_theme_block);
+    let change_theme =
+        Paragraph::new(Text::styled("", Style::default().fg(TEXT_COLOR))).block(change_theme_block);
 
     let about_mfp_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
+        .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+        .title_top("About")
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
+        .style(Style::default().fg(TEXT_COLOR));
 
     let about_mfp = Paragraph::new(Text::styled(
-        "musicForProgramming About",
-        Style::default().fg(TEXT_COLOR),
+        "Through years of trial and error — skipping around radio streams, playing entire collections on shuffle, or repeating certain tracks over and over — we have found that the most compelling music for sustained concentration tends to contain a mixture of the following: Noise, Drones, Arpeggios, Atmospheres, Field Recordings, Arrhythmic Textures, Vagueness (Hypnagogia), Microtones / Dissonance, Detail / Finery / Patterns, Awesome / Daunting / Foreboding, Vast / Transcendental / Meditative, etc.",
+        Style::default().fg(Color::Rgb(175, 196, 219)),
     ))
+    .wrap(Wrap {trim: false})
     .block(about_mfp_block);
 
     let mfp_credits_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
+        .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+        .title_top("Credits")
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
+        .style(Style::default().fg(TEXT_COLOR));
 
     let mfp_credits = Paragraph::new(Text::styled(
-        "musicForProgramming Credits",
-        Style::default().fg(TEXT_COLOR),
-    ))
+        "Music For Programming is maintained by Datassette, the first episode was released in 2009. This incarnation of the site was built with Svelte, and the typeface is IBM Plex Mono.",
+        Style::default().fg(Color::Rgb(175, 196, 219),
+    )))
+    .wrap(Wrap { trim: false})
     .block(mfp_credits_block);
 
     let middle_layout = Layout::default()
@@ -118,36 +134,44 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         ])
         .split(outer_layout[1]);
 
+    let full_episode_title = app.episodes[app.selected_episode].title.clone();
+    let mut split_title = full_episode_title.splitn(2, ":");
+    let episode_number = split_title.next().unwrap();
+    let episode_title = split_title.next().unwrap();
     let ep_title_block = Block::default()
+        .title_top(episode_number)
+        .title_alignment(Alignment::Center)
+        .title_style(THEME.title)
+        .border_set(ROUNDED)
         .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
-    let episode_title = app.episodes[app.selected_episode].title.clone();
-    let ep_title = Paragraph::new(Text::styled(episode_title, Style::default().fg(TEXT_COLOR)))
-        .block(ep_title_block);
+        .style(Style::default().fg(TEXT_COLOR));
+    let ep_title = Paragraph::new(Text::styled(
+        episode_title,
+        Style::default().fg(Color::Rgb(175, 196, 219)),
+    ))
+    .block(ep_title_block);
 
     let ep_info_block = Block::default()
-        .borders(Borders::TOP | Borders::LEFT | Borders::BOTTOM)
-        .style(Style::new().bg(BACKGROUND));
+        .borders(Borders::LEFT | Borders::BOTTOM)
+        .style(Style::default().fg(Color::Rgb(175, 196, 219)));
     let episode_information = format!(
         "Duration: {}\nRelease Date: {}",
         app.episodes[app.selected_episode].duration.clone(),
         app.episodes[app.selected_episode].pub_date.clone(),
     );
-    let ep_info = Paragraph::new(Text::styled(
-        episode_information,
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(ep_info_block);
+    let ep_info = Paragraph::new(Text::styled(episode_information, Color::Rgb(175, 196, 219)))
+        .block(ep_info_block);
 
     let play_status_bar_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
+        .title_top("Status Bar")
+        .title_alignment(Alignment::Center)
+        .border_set(ROUNDED)
+        .borders(Borders::TOP)
+        .style(Style::default().fg(TEXT_COLOR));
 
-    let play_status_bar = Paragraph::new(Text::styled(
-        "Play Status Bar",
-        Style::default().fg(TEXT_COLOR),
-    ))
-    .block(play_status_bar_block);
+    let play_status_bar =
+        Paragraph::new(Text::styled("Play Status Bar", Color::Rgb(175, 196, 219)))
+            .block(play_status_bar_block);
 
     let right_layout = Layout::default()
         .direction(Direction::Vertical)
@@ -157,19 +181,20 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let search_bar_block = Block::default()
         .title_top("Search Bar")
         .title_alignment(Alignment::Center)
-        .borders(Borders::ALL)
-        .style(Style::new().bg(BACKGROUND));
+        .title_style(TEXT_COLOR)
+        .border_set(ROUNDED)
+        .borders(Borders::ALL);
 
-    let search_bar = Paragraph::new(Text::styled("Search Bar", Style::default().fg(TEXT_COLOR)))
-        .block(search_bar_block);
+    let search_bar =
+        Paragraph::new(Text::styled("", Style::default().fg(TEXT_COLOR))).block(search_bar_block);
 
     let ep_list_block = Block::bordered()
         .title_top("Episode List")
         .title_alignment(Alignment::Center)
-        .title_style(Style::new().fg(ROSE.c800))
+        .title_style(TEXT_COLOR)
         .border_set(ROUNDED)
         .borders(Borders::TOP | Borders::RIGHT | Borders::BOTTOM)
-        .style(Style::new().bg(BACKGROUND));
+        .style(Style::default().fg(Color::Rgb(175, 196, 219)));
 
     let mut episode_list_items: Vec<_> = Vec::new();
 
@@ -181,11 +206,12 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let episode_list = List::new(episode_list_items)
         .block(ep_list_block)
         .highlight_symbol(">>")
-        .highlight_style(
-            Style::default()
-                .fg(Color::Rgb(185, 185, 220))
-                .bg(Color::Rgb(28, 13, 41)),
-        );
+        .highlight_style(THEME.highlight)
+        .style(Style::default().fg(Color::Rgb(175, 196, 219)));
+
+    let title = Span::styled("Dataglass", THEME.app_title);
+
+    // frame.render_widget(title, outer_layout[0]);
     frame.render_widget(menu, left_layout[0]);
     frame.render_widget(open_playlist, left_layout[1]);
     frame.render_widget(save_to_playlist, left_layout[2]);
