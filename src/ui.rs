@@ -9,7 +9,8 @@ use ratatui::{
         },
         Color, Style, Stylize,
     },
-    symbols::border::ROUNDED,
+    symbols,
+    symbols::border::*,
     text::Span,
     text::Text,
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph, Wrap},
@@ -38,11 +39,14 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             Constraint::Percentage(9), // -1
             Constraint::Percentage(9), // -1
             Constraint::Percentage(9), // -1
-            Constraint::Percentage(27),
-            Constraint::Percentage(27),
+            Constraint::Percentage(25),
+            Constraint::Percentage(29),
         ])
         .split(outer_layout[0]);
-
+    let top_border_set = symbols::border::Set {
+        horizontal_top: symbols::line::NORMAL.horizontal,
+        ..symbols::border::ROUNDED
+    };
     let menu_block = Block::default()
         .title_top("MENU")
         .title_alignment(Alignment::Center)
@@ -54,11 +58,11 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let menu = Paragraph::new(Text::styled("", TEXT_COLOR)).block(menu_block);
 
     let open_playlist_block = Block::default()
-        .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+        .borders(Borders::LEFT | Borders::RIGHT)
         .title_top("Open Playlist")
         .title_alignment(Alignment::Center)
         .title_style(THEME.title)
-        .border_set(ROUNDED)
+        .border_set(top_border_set)
         .style(Style::default().fg(TEXT_COLOR));
 
     let open_playlist = Paragraph::new(Text::styled("", TEXT_COLOR)).block(open_playlist_block);

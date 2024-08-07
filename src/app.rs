@@ -1,7 +1,7 @@
 use ratatui::widgets::ListState;
 use reqwest::get;
 use rss::Channel;
-use std::{error::Error, io::Read, num::NonZeroUsize, result::Result};
+use std::{error::Error, io::Read, num::NonZeroUsize, result::Result, time::Duration};
 use stream_download::{
     http::{reqwest::Client, HttpStream},
     source::SourceStream,
@@ -10,7 +10,7 @@ use stream_download::{
 };
 pub type AppResult<T> = Result<T, Box<dyn Error>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Episode {
     pub title: String,
     pub audio_url: String,
@@ -21,7 +21,7 @@ pub struct Episode {
     pub link: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct App {
     pub episodes: Vec<Episode>,
     pub current_track: Option<Episode>,
@@ -29,13 +29,15 @@ pub struct App {
     pub list_state: ListState,
     pub selected_episode: usize,
     pub running: bool,
-    pub storage: BoundedStorageProvider<MemoryStorageProvider>, // sink:
+    pub storage: BoundedStorageProvider<MemoryStorageProvider>,
+    pub client: Client,
 }
 
 impl App {
     pub fn new() -> Self {
         let mut episode_list_state = ListState::default();
         episode_list_state.select(Some(0));
+        let client = Client::new();
         Self {
             episodes: Vec::new(),
             current_track: None,
@@ -47,6 +49,7 @@ impl App {
                 MemoryStorageProvider,
                 NonZeroUsize::new(512 * 1024).unwrap(),
             ),
+            client,
         }
     }
     pub fn quit(&mut self) {
@@ -58,7 +61,7 @@ impl App {
     // }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum PlaybackState {
     Playing,
     Paused,
