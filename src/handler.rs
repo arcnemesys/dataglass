@@ -1,6 +1,9 @@
-use crate::app::{App, AppResult, PlaybackState, SelectedList};
+use crate::app::{stream_episode, App, AppResult, PlaybackState, SelectedList};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-
+use reqwest::blocking::get;
+use rodio::{source::Source, Decoder, OutputStream};
+use std::io::Cursor;
+use tokio;
 /// Handles the key events and updates the state of [`App`].
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match key_event.code {
@@ -26,13 +29,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.episode_list_state.select(Some(app.selected_episode));
             }
         }
-        KeyCode::Enter => match app.selected_list {
-            SelectedList::Episodes => {
-                app.playback_state = PlaybackState::Playing;
-                let url = app.episodes[app.selected_episode].audio_url.clone();
-                app.stream_episode(&url);
-            }
-        },
+        KeyCode::Enter => {}
         // Counter handlers
         KeyCode::Right => {}
         KeyCode::Left => {}

@@ -1,16 +1,20 @@
+use anyhow::{Context, Error, Result};
+use futures::{TryStream, TryStreamExt};
+use futures_util::stream::StreamExt;
 use ratatui::widgets::ListState;
 use reqwest::get;
 use rodio::{DeviceTrait, OutputStream, Sink};
 use rss::Channel;
-use std::{error::Error, io::Read, num::NonZeroUsize, result::Result, time::Duration};
+use std::{error::Error as StdErr, io::Read, num::NonZeroUsize, time::Duration};
 use stream_download::{
     http::{reqwest::Client, HttpStream},
     source::SourceStream,
     storage::{adaptive::AdaptiveStorageProvider, memory::MemoryStorageProvider, StorageProvider},
     Settings, StreamDownload, StreamState,
 };
-
-pub type AppResult<T> = Result<T, Box<dyn Error>>;
+use tokio::fs::{create_dir_all, File};
+use tokio::io::AsyncWriteExt;
+pub type AppResult<T> = Result<T, Box<dyn StdErr>>;
 
 #[derive(Debug, Clone)]
 pub struct Episode {
@@ -65,27 +69,27 @@ impl App {
         self.running = false;
     }
 
-    pub async fn stream_episode(&self, url: &String) -> Result<(), Box<dyn Error>> {
-        let (_stream, handle) = OutputStream::try_default()?;
-        let sink = Sink::try_new(&handle)?;
-        let prefetch_bytes = 192 / 8 * 1024 * 10;
-        let settings = Settings::default().prefetch_bytes(prefetch_bytes);
-        let adaptive_storage = AdaptiveStorageProvider::new(
-            MemoryStorageProvider,
-            NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
-        );
-        let stream = HttpStream::new(self.client.clone(), url.parse()?).await?;
+    // pub async fn stream_episode(&self, url: &String) -> Result<(), Box<dyn Error>> {
+    //     let (_stream, handle) = OutputStream::try_default()?;
+    //     let sink = Sink::try_new(&handle)?;
+    //     let prefetch_bytes = 192 / 8 * 1024 * 10;
+    //     let settings = Settings::default().prefetch_bytes(prefetch_bytes);
+    //     let adaptive_storage = AdaptiveStorageProvider::new(
+    //         MemoryStorageProvider,
+    //         NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
+    //     );
+    //     let stream = HttpStream::new(self.client.clone(), url.parse()?).await?;
 
-        let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
+    //     let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
 
-        sink.append(rodio::Decoder::new(reader)?);
+    //     sink.append(rodio::Decoder::new(reader)?);
 
-        let handle = tokio::task::spawn_blocking(move || {
-            sink.sleep_until_end();
-        });
-        handle.await?;
-        Ok(())
-    }
+    //     let handle = tokio::task::spawn(move || {
+    //         sink.sleep_until_end();
+    //     });
+    //     handle.await?;
+    //     Ok(())
+    // }
 }
 
 #[derive(Debug, Clone)]
@@ -109,13 +113,13 @@ enum Message {
 
 const MFP_FEED: &str = "https://musicforprogramming.net/rss.xml";
 
-pub async fn music_for_programming() -> Result<Vec<Episode>, Box<dyn Error>> {
+pub async fn music_for_programming() -> Result<Vec<Episode>, Error> {
     let url = "https://musicforprogramming.net/rss.xml";
     let response = get(url).await.unwrap();
     let mut episodes = Vec::new();
 
     if response.status().is_success() {
-        let content = response.text().await?;
+        let content = response.text().await.unwrap();
         let channel = Channel::read_from(content.as_bytes())?;
 
         for item in channel.items() {
@@ -145,24 +149,61 @@ pub async fn music_for_programming() -> Result<Vec<Episode>, Box<dyn Error>> {
     Ok(episodes)
 }
 
-// pub async fn stream_episode(app: &mut App, url: &String) -> Result<(), Box<dyn Error>> {
-//     let (_stream, handle) = OutputStream::try_default()?;
-//     let sink = Sink::try_new(&handle)?;
-//     let prefetch_bytes = 192 / 8 * 1024 * 10;
-//     let settings = Settings::default().prefetch_bytes(prefetch_bytes);
-//     let adaptive_storage = AdaptiveStorageProvider::new(
-//         MemoryStorageProvider,
-//         NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
-//     );
-//     let stream = HttpStream::new(app.client.clone(), url.parse()?).await?;
+pub async fn stream_episode(app: &mut App, url: &String) -> Result<(), Error> {
+    let (_stream, handle) = OutputStream::try_default()?;
+    let sink = Sink::try_new(&handle)?;
+    let prefetch_bytes = 192 / 8 * 1024 * 10;
+    let settings = Settings::default().prefetch_bytes(prefetch_bytes);
+    let adaptive_storage = AdaptiveStorageProvider::new(
+        MemoryStorageProvider,
+        NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
+    );
+    // let stream = HttpStream::new(app.client.clone(), url.parse()?).await?;
 
-//     let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
+    let mut reader =
+        StreamDownload::new::<HttpStream<Client>>(url.parse()?, adaptive_storage, settings).await?;
 
-//     sink.append(rodio::Decoder::new(reader)?);
+    let mut buf = Vec::new();
 
-//     let handle = tokio::task::spawn_blocking(move || {
-//         sink.sleep_until_end();
-//     });
-//     handle.await?;
-//     Ok(())
-// }
+    reader.read_to_end(&mut buf)?;
+    sink.append(rodio::Decoder::new(reader)?);
+
+    let handle = tokio::task::spawn_blocking(move || {
+        sink.sleep_until_end();
+    });
+    handle.await?;
+    Ok(())
+}
+
+pub async fn download_episodes(app: &App) -> Result<(), Error> {
+    let mut home_dir = dirs::home_dir().context("Could not find home directory")?;
+    home_dir.push(".config");
+    home_dir.push("music-for-programming");
+
+    create_dir(&home_dir)
+        .await
+        .context("Failed to create directory")?;
+
+    let mut file = File::create(home_dir.clone())
+        .await
+        .context("Failed to create file")?;
+    for i in app.episodes.clone() {
+        let resp = reqwest::get(i.audio_url)
+            .await
+            .context("Failed to Get from '{url}'")?;
+        let mut stream = resp.bytes_stream();
+        while let Ok(Some(chunk)) = stream.try_next().await {
+            let mut split_title = i.title.splitn(2, ":");
+            let episode_number = split_title.next().unwrap();
+            let episode_title = split_title.next().unwrap();
+            home_dir.push(format!("{}_{}.mp3", episode_number, episode_title));
+            // let audio_chunk = chunk?;
+            file.write_all(&chunk)
+                .await
+                .context("Error while writing to file");
+        }
+        home_dir.pop();
+    }
+
+    Ok(())
+}
