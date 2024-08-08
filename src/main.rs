@@ -7,7 +7,6 @@ use dataglass::handler::handle_key_events;
 use dataglass::tui::Tui;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use rodio::cpal::*;
 use rodio::{DeviceTrait, OutputStream, Sink};
 use rss::Channel;
 use serde::{Deserialize, Serialize};
@@ -15,12 +14,7 @@ use std::collections::VecDeque;
 use std::error::Error;
 use std::io;
 use std::io::BufReader;
-use std::num::NonZeroUsize;
 use std::time::Duration;
-use stream_download::http::HttpStream;
-use stream_download::storage::memory::MemoryStorageProvider;
-use stream_download::{storage::adaptive::AdaptiveStorageProvider, Settings, StreamDownload};
-use traits::HostTrait;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new();
@@ -43,27 +37,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     tui.exit()?;
-    Ok(())
-}
-
-pub async fn stream_episode(app: App, url: String) -> Result<(), Box<dyn Error>> {
-    let (_stream, handle) = OutputStream::try_default()?;
-    let sink = Sink::try_new(&handle)?;
-    let prefetch_bytes = 192 / 8 * 1024 * 10;
-    let settings = Settings::default().prefetch_bytes(prefetch_bytes);
-    let adaptive_storage = AdaptiveStorageProvider::new(
-        MemoryStorageProvider,
-        NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
-    );
-    let stream = HttpStream::new(app.client, url.parse()?).await?;
-
-    let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
-
-    sink.append(rodio::Decoder::new(reader)?);
-
-    let handle = tokio::task::spawn_blocking(move || {
-        sink.sleep_until_end();
-    });
-    handle.await?;
     Ok(())
 }

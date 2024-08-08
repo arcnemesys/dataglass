@@ -1,11 +1,12 @@
 use ratatui::widgets::ListState;
 use reqwest::get;
+use rodio::{DeviceTrait, OutputStream, Sink};
 use rss::Channel;
 use std::{error::Error, io::Read, num::NonZeroUsize, result::Result, time::Duration};
 use stream_download::{
     http::{reqwest::Client, HttpStream},
     source::SourceStream,
-    storage::{bounded::BoundedStorageProvider, memory::MemoryStorageProvider, StorageProvider},
+    storage::{adaptive::AdaptiveStorageProvider, memory::MemoryStorageProvider, StorageProvider},
     Settings, StreamDownload, StreamState,
 };
 pub type AppResult<T> = Result<T, Box<dyn Error>>;
@@ -30,8 +31,13 @@ pub struct App {
     pub menu_list_state: ListState,
     pub selected_episode: usize,
     pub running: bool,
-    pub storage: BoundedStorageProvider<MemoryStorageProvider>,
     pub client: Client,
+    pub selected_list: SelectedList,
+}
+
+#[derive(Clone, Debug)]
+pub enum SelectedList {
+    Episodes,
 }
 
 impl App {
@@ -50,24 +56,17 @@ impl App {
             episode_list_state,
             menu_list_state,
             running: true,
-            storage: BoundedStorageProvider::new(
-                MemoryStorageProvider,
-                NonZeroUsize::new(512 * 1024).unwrap(),
-            ),
             client,
+            selected_list: SelectedList::Episodes,
         }
     }
     pub fn quit(&mut self) {
         self.running = false;
     }
-
-    // pub fn select_episode(&mut self) {
-
-    // }
 }
 
 #[derive(Debug, Clone)]
-enum PlaybackState {
+pub enum PlaybackState {
     Playing,
     Paused,
     Stopped,
@@ -121,4 +120,26 @@ pub async fn music_for_programming() -> Result<Vec<Episode>, Box<dyn Error>> {
     }
 
     Ok(episodes)
+}
+
+pub async fn stream_episode(app: &mut App, url: &String) -> Result<(), Box<dyn Error>> {
+    let (_stream, handle) = OutputStream::try_default()?;
+    let sink = Sink::try_new(&handle)?;
+    let prefetch_bytes = 192 / 8 * 1024 * 10;
+    let settings = Settings::default().prefetch_bytes(prefetch_bytes);
+    let adaptive_storage = AdaptiveStorageProvider::new(
+        MemoryStorageProvider,
+        NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
+    );
+    let stream = HttpStream::new(app.client.clone(), url.parse()?).await?;
+
+    let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
+
+    sink.append(rodio::Decoder::new(reader)?);
+
+    let handle = tokio::task::spawn_blocking(move || {
+        sink.sleep_until_end();
+    });
+    handle.await?;
+    Ok(())
 }
