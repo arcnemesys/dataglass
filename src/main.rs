@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     while app.running {
         tui.draw(&mut app)?;
-        match tui.events.next()? {
+        match tui.events.next().await? {
             Event::Key(key_event) => handle_key_events(key_event, &mut app)?,
             Event::Mouse(_) => {}
             Event::Resize(_, _) => {}

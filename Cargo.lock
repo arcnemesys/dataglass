@@ -467,6 +467,7 @@ checksum = "f476fe445d41c9e991fd07515a6f463074b782242ccf4a5b7b1d1012e70824df"
 dependencies = [
  "bitflags 2.6.0",
  "crossterm_winapi",
+ "futures-core",
  "libc",
  "mio 0.8.11",
  "parking_lot",
@@ -535,6 +536,8 @@ checksum = "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f"
 name = "dataglass"
 version = "0.1.0"
 dependencies = [
+ "crossterm",
+ "futures",
  "ratatui",
  "ratatui-image",
  "reqwest",

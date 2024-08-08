@@ -76,14 +76,8 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .style(Style::default().fg(Color::Rgb(175, 196, 219)));
 
     let about_mfp = Paragraph::new(Text::raw(
-        "Through years of trial and error — skipping around radio streams,
-        playing entire collections on shuffle, or repeating certain tracks over and over,
-        we have found that the most compelling music for sustained concentration,
-        tends to contain a mixture of the following:
-        Noise, Drones, Arpeggios, Atmospheres, Field Recordings,
-        Arrhythmic Textures, Vagueness (Hypnagogia),
-        Microtones / Dissonance, Detail / Finery / Patterns,
-        Awesome / Daunting / Foreboding, Vast / Transcendental / Meditative, etc.",
+        "Through years of trial and error — skipping around radio streams, playing entire collections on shuffle, or repeating certain tracks over and over, we have found that the most compelling music for sustained concentration, tends to contain a mixture of the following:
+        Noise, Drones, Arpeggios, Atmospheres, Field Recordings, Arrhythmic Textures, Vagueness (Hypnagogia), Microtones / Dissonance, Detail / Finery / Patterns, Awesome / Daunting / Foreboding, Vast / Transcendental / Meditative, etc.",
     ))
     .wrap(Wrap { trim: false })
     .scroll((0, 0))

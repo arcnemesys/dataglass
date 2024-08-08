@@ -9,6 +9,7 @@ use stream_download::{
     storage::{adaptive::AdaptiveStorageProvider, memory::MemoryStorageProvider, StorageProvider},
     Settings, StreamDownload, StreamState,
 };
+
 pub type AppResult<T> = Result<T, Box<dyn Error>>;
 
 #[derive(Debug, Clone)]
@@ -62,6 +63,28 @@ impl App {
     }
     pub fn quit(&mut self) {
         self.running = false;
+    }
+
+    pub async fn stream_episode(&self, url: &String) -> Result<(), Box<dyn Error>> {
+        let (_stream, handle) = OutputStream::try_default()?;
+        let sink = Sink::try_new(&handle)?;
+        let prefetch_bytes = 192 / 8 * 1024 * 10;
+        let settings = Settings::default().prefetch_bytes(prefetch_bytes);
+        let adaptive_storage = AdaptiveStorageProvider::new(
+            MemoryStorageProvider,
+            NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
+        );
+        let stream = HttpStream::new(self.client.clone(), url.parse()?).await?;
+
+        let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
+
+        sink.append(rodio::Decoder::new(reader)?);
+
+        let handle = tokio::task::spawn_blocking(move || {
+            sink.sleep_until_end();
+        });
+        handle.await?;
+        Ok(())
     }
 }
 
@@ -122,24 +145,24 @@ pub async fn music_for_programming() -> Result<Vec<Episode>, Box<dyn Error>> {
     Ok(episodes)
 }
 
-pub async fn stream_episode(app: &mut App, url: &String) -> Result<(), Box<dyn Error>> {
-    let (_stream, handle) = OutputStream::try_default()?;
-    let sink = Sink::try_new(&handle)?;
-    let prefetch_bytes = 192 / 8 * 1024 * 10;
-    let settings = Settings::default().prefetch_bytes(prefetch_bytes);
-    let adaptive_storage = AdaptiveStorageProvider::new(
-        MemoryStorageProvider,
-        NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
-    );
-    let stream = HttpStream::new(app.client.clone(), url.parse()?).await?;
+// pub async fn stream_episode(app: &mut App, url: &String) -> Result<(), Box<dyn Error>> {
+//     let (_stream, handle) = OutputStream::try_default()?;
+//     let sink = Sink::try_new(&handle)?;
+//     let prefetch_bytes = 192 / 8 * 1024 * 10;
+//     let settings = Settings::default().prefetch_bytes(prefetch_bytes);
+//     let adaptive_storage = AdaptiveStorageProvider::new(
+//         MemoryStorageProvider,
+//         NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
+//     );
+//     let stream = HttpStream::new(app.client.clone(), url.parse()?).await?;
 
-    let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
+//     let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
 
-    sink.append(rodio::Decoder::new(reader)?);
+//     sink.append(rodio::Decoder::new(reader)?);
 
-    let handle = tokio::task::spawn_blocking(move || {
-        sink.sleep_until_end();
-    });
-    handle.await?;
-    Ok(())
-}
+//     let handle = tokio::task::spawn_blocking(move || {
+//         sink.sleep_until_end();
+//     });
+//     handle.await?;
+//     Ok(())
+// }

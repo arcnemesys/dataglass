@@ -1,8 +1,8 @@
-use crate::app::{stream_episode, App, AppResult, PlaybackState, SelectedList};
+use crate::app::{App, AppResult, PlaybackState, SelectedList};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// Handles the key events and updates the state of [`App`].
-pub async fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
+pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     match key_event.code {
         // Exit application on `ESC` or `q`
         KeyCode::Esc | KeyCode::Char('q') => {
@@ -30,7 +30,7 @@ pub async fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<
             SelectedList::Episodes => {
                 app.playback_state = PlaybackState::Playing;
                 let url = app.episodes[app.selected_episode].audio_url.clone();
-                stream_episode(app, &url).await?;
+                app.stream_episode(&url);
             }
         },
         // Counter handlers
