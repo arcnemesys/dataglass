@@ -16,6 +16,7 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph, Wrap},
     Frame,
 };
+use tui_menu::{Menu, MenuEvent, MenuItem, MenuState};
 
 const BACKGROUND: Color = STONE.c400;
 const TEXT_COLOR: Color = ROSE.c800;
@@ -23,26 +24,27 @@ use crate::app::App;
 
 pub fn render(app: &mut App, frame: &mut Frame) {
     let outer_layout = Layout::default()
-        .direction(ratatui::layout::Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(30),
-            Constraint::Percentage(38),
-            Constraint::Percentage(32),
-        ])
+        .direction(ratatui::layout::Direction::Vertical)
+        .constraints([Constraint::Percentage(5), Constraint::Percentage(95)])
         .split(frame.size());
+
+    let inner_layout = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(25),
+            Constraint::Percentage(50),
+            Constraint::Percentage(25),
+        ])
+        .split(outer_layout[1]);
 
     let left_layout = Layout::default()
         .direction(ratatui::layout::Direction::Vertical)
         .constraints([
-            Constraint::Percentage(10),
-            Constraint::Percentage(9), // -1
-            Constraint::Percentage(9), // -1
-            Constraint::Percentage(9), // -1
-            Constraint::Percentage(9), // -1
-            Constraint::Percentage(25),
-            Constraint::Percentage(29),
+            Constraint::Percentage(33),
+            Constraint::Percentage(33),
+            Constraint::Percentage(33),
         ])
-        .split(outer_layout[0]);
+        .split(inner_layout[0]);
     let top_border_set = symbols::border::Set {
         horizontal_top: symbols::line::NORMAL.horizontal,
         ..symbols::border::ROUNDED
@@ -52,10 +54,19 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .title_alignment(Alignment::Center)
         .title_style(THEME.title)
         .border_set(ROUNDED)
-        .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT)
-        .style(Style::default().fg(TEXT_COLOR));
+        .borders(Borders::TOP | Borders::LEFT | Borders::RIGHT);
 
-    let menu = Paragraph::new(Text::styled("", TEXT_COLOR)).block(menu_block);
+    let menu_list_items = vec![
+        ListItem::new(Text::styled("Open Playlist", TEXT_COLOR)),
+        ListItem::new(Text::styled("Change Theme", TEXT_COLOR)),
+    ];
+
+    // let menu = Paragraph::new(Text::styled("", TEXT_COLOR)).block(menu_block);
+    let menu = List::new(menu_list_items)
+        .block(menu_block)
+        .highlight_symbol(">>")
+        .highlight_style(THEME.highlight)
+        .style(Style::default().fg(Color::Rgb(175, 196, 219)));
 
     let open_playlist_block = Block::default()
         .borders(Borders::LEFT | Borders::RIGHT)
@@ -136,7 +147,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             Constraint::Percentage(50),
             Constraint::Percentage(40),
         ])
-        .split(outer_layout[1]);
+        .split(inner_layout[1]);
 
     let full_episode_title = app.episodes[app.selected_episode].title.clone();
     let mut split_title = full_episode_title.splitn(2, ":");
@@ -180,7 +191,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let right_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(10), Constraint::Percentage(90)])
-        .split(outer_layout[2]);
+        .split(inner_layout[2]);
 
     let search_bar_block = Block::default()
         .title_top("Search Bar")
@@ -192,6 +203,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let search_bar =
         Paragraph::new(Text::styled("", Style::default().fg(TEXT_COLOR))).block(search_bar_block);
 
+    // TODO: Add SaveToPlaylist & RemoveFromPlaylist Button/Icon on list items.
     let ep_list_block = Block::bordered()
         .title_top("Episode List")
         .title_alignment(Alignment::Center)
@@ -216,18 +228,14 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let title = Span::styled("Dataglass", THEME.app_title);
 
     // frame.render_widget(title, outer_layout[0]);
-    frame.render_widget(menu, left_layout[0]);
-    frame.render_widget(open_playlist, left_layout[1]);
-    frame.render_widget(save_to_playlist, left_layout[2]);
-    frame.render_widget(remove_from_playlist, left_layout[3]);
-    frame.render_widget(change_theme, left_layout[4]);
-    frame.render_widget(about_mfp, left_layout[5]);
-    frame.render_widget(mfp_credits, left_layout[6]);
+    frame.render_stateful_widget(menu, left_layout[0], &mut app.menu_list_state);
+    frame.render_widget(about_mfp, left_layout[1]);
+    frame.render_widget(mfp_credits, left_layout[2]);
     frame.render_widget(ep_title, middle_layout[0]);
     frame.render_widget(ep_info, middle_layout[1]);
     frame.render_widget(play_status_bar, middle_layout[2]);
     frame.render_widget(search_bar, right_layout[0]);
-    frame.render_stateful_widget(episode_list, right_layout[1], &mut app.list_state);
+    frame.render_stateful_widget(episode_list, right_layout[1], &mut app.episode_list_state);
 
     // frame.render_widget(composed_commit, inner_right_layout[0]);
     // frame.render_widget(interaction_panel, inner_right_layout[1]);

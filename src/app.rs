@@ -26,7 +26,8 @@ pub struct App {
     pub episodes: Vec<Episode>,
     pub current_track: Option<Episode>,
     pub playback_state: PlaybackState,
-    pub list_state: ListState,
+    pub episode_list_state: ListState,
+    pub menu_list_state: ListState,
     pub selected_episode: usize,
     pub running: bool,
     pub storage: BoundedStorageProvider<MemoryStorageProvider>,
@@ -37,13 +38,17 @@ impl App {
     pub fn new() -> Self {
         let mut episode_list_state = ListState::default();
         episode_list_state.select(Some(0));
+        let mut menu_list_state = ListState::default();
+        menu_list_state.select(Some(0));
         let client = Client::new();
+
         Self {
             episodes: Vec::new(),
             current_track: None,
             selected_episode: 0,
             playback_state: PlaybackState::Stopped,
-            list_state: episode_list_state,
+            episode_list_state,
+            menu_list_state,
             running: true,
             storage: BoundedStorageProvider::new(
                 MemoryStorageProvider,

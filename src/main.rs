@@ -1,3 +1,4 @@
+#![allow(unused)]
 use reqwest::{get, Client};
 // use rodio::{source::Source, Decoder, OutputStream, Sink};
 use dataglass::app::{music_for_programming, App};
@@ -6,7 +7,8 @@ use dataglass::handler::handle_key_events;
 use dataglass::tui::Tui;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use rodio::{OutputStream, Sink};
+use rodio::cpal::*;
+use rodio::{DeviceTrait, OutputStream, Sink};
 use rss::Channel;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
@@ -18,6 +20,7 @@ use std::time::Duration;
 use stream_download::http::HttpStream;
 use stream_download::storage::memory::MemoryStorageProvider;
 use stream_download::{storage::adaptive::AdaptiveStorageProvider, Settings, StreamDownload};
+use traits::HostTrait;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new();
@@ -29,9 +32,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let events = EventHandler::new(250);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
-    stream_episode(app.clone(), app.episodes[0].audio_url.clone())
-        .await
-        .unwrap();
+
     while app.running {
         tui.draw(&mut app)?;
         match tui.events.next()? {
@@ -65,6 +66,4 @@ pub async fn stream_episode(app: App, url: String) -> Result<(), Box<dyn Error>>
     });
     handle.await?;
     Ok(())
-    // app.client
-    // let settings = Settings::default().pre
 }
