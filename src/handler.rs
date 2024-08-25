@@ -1,11 +1,16 @@
-use crate::app::{stream_episode, App, AppResult, PlaybackState, SelectedList};
+use crate::app::{stream_and_play, cursor_stream, App, AppResult, PlaybackState, SelectedList};
 use ratatui::crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use reqwest::blocking::get;
 use rodio::{source::Source, Decoder, OutputStream};
 use std::io::Cursor;
+use std::sync::Arc;
+use std::thread;
 use tokio;
+use tokio::runtime::Runtime;
 /// Handles the key events and updates the state of [`App`].
-pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
+pub async fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
+    let episodes_clone = Arc::clone(&app.episodes);
+
     match key_event.code {
         // Exit application on `ESC` or `q`
         KeyCode::Esc | KeyCode::Char('q') => {
@@ -24,12 +29,20 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
         }
         KeyCode::Down => {
-            if app.selected_episode < app.episodes.len() - 1 {
+            if app.selected_episode < episodes_clone.read().unwrap().len() - 1 {
                 app.selected_episode += 1;
                 app.episode_list_state.select(Some(app.selected_episode));
             }
         }
-        KeyCode::Enter => {}
+        KeyCode::Enter => match app.selected_list {
+            SelectedList::Episodes => {
+                app.playback_state = PlaybackState::Playing;
+                let url = episodes_clone.read().unwrap()[app.selected_episode]
+                    .audio_url
+                    .clone();
+                stream_and_play(&url[..]).await?;
+            }
+        },
         // Counter handlers
         KeyCode::Right => {}
         KeyCode::Left => {}

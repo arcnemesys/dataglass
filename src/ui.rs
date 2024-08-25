@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::theme::{Theme, THEME};
 use ratatui::{
     buffer::Buffer,
@@ -106,8 +108,10 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             Constraint::Percentage(40),
         ])
         .split(inner_layout[1]);
-
-    let full_episode_title = app.episodes[app.selected_episode].title.clone();
+    let episodes_clone = Arc::clone(&app.episodes);
+    let full_episode_title = episodes_clone.read().unwrap()[app.selected_episode]
+        .title
+        .clone();
     let mut split_title = full_episode_title.splitn(2, ":");
     let episode_number = split_title.next().unwrap();
     let episode_title = split_title.next().unwrap();
@@ -130,8 +134,12 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .style(Style::default().fg(Color::Rgb(175, 196, 219)));
     let episode_information = format!(
         "Duration: {}\nRelease Date: {}",
-        app.episodes[app.selected_episode].duration.clone(),
-        app.episodes[app.selected_episode].pub_date.clone(),
+        episodes_clone.read().unwrap()[app.selected_episode]
+            .duration
+            .clone(),
+        episodes_clone.read().unwrap()[app.selected_episode]
+            .pub_date
+            .clone(),
     );
     let ep_info = Paragraph::new(Text::styled(episode_information, Color::Rgb(175, 196, 219)))
         .block(ep_info_block);
@@ -173,7 +181,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     let mut episode_list_items: Vec<_> = Vec::new();
 
-    for ep in &app.episodes {
+    for ep in episodes_clone.read().unwrap().iter() {
         let ep_list_item = ListItem::new(Text::from(ep.title.clone()));
         episode_list_items.push(ep_list_item);
     }

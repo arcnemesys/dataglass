@@ -1,5 +1,5 @@
 #![allow(unused)]
-use dataglass::app::{download_episodes, music_for_programming, App};
+use dataglass::app::{music_for_programming, App};
 use dataglass::event::{Event, EventHandler};
 use dataglass::handler::handle_key_events;
 use dataglass::tui::Tui;
@@ -13,6 +13,7 @@ use std::collections::VecDeque;
 use std::error::Error;
 use std::io;
 use std::io::BufReader;
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 #[tokio::main]
@@ -20,8 +21,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new();
 
     let mfp_episodes = music_for_programming().await.unwrap();
-    app.episodes = mfp_episodes;
-    download_episodes(&app).await.unwrap();
+    app.episodes = Arc::new(RwLock::new(mfp_episodes));
     let backend = CrosstermBackend::new(io::stderr());
     let terminal = Terminal::new(backend)?;
     let events = EventHandler::new(250);
@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     while app.running {
         tui.draw(&mut app)?;
         match tui.events.next()? {
-            Event::Key(key_event) => handle_key_events(key_event, &mut app)?,
+            Event::Key(key_event) => handle_key_events(key_event, &mut app).await?,
             Event::Mouse(_) => {}
             Event::Resize(_, _) => {}
         }
