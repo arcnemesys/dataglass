@@ -5,16 +5,10 @@ use dataglass::handler::handle_key_events;
 use dataglass::tui::Tui;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use reqwest::{get, Client};
-use rodio::{DeviceTrait, OutputStream, Sink};
-use rss::Channel;
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
 use std::error::Error;
 use std::io;
-use std::io::BufReader;
 use std::sync::{Arc, RwLock};
-use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

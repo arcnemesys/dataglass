@@ -1,5 +1,3 @@
-// use anyhow::{Context, Error, Result};
-// use color_eyre::{eyre::Context, Result as EyResult, Section};
 use futures::{StreamExt, TryStream, TryStreamExt};
 use ratatui::widgets::ListState;
 use reqwest::get;
@@ -77,25 +75,6 @@ impl App {
         self.running = false;
     }
 
-// see: https://stackoverflow.com/questions/63463503/playing-audio-from-url-in-rust
-
-    pub async fn stream_episode(&self, url: &String) -> Result<(), Box<dyn Error>> {
-        let (_stream, handle) = OutputStream::try_default()?;
-        let sink = Sink::try_new(&handle)?;
-        let prefetch_bytes = 192 / 8 * 1024 * 10;
-        let settings = Settings::default().prefetch_bytes(prefetch_bytes);
-        let adaptive_storage = AdaptiveStorageProvider::new(
-            MemoryStorageProvider,
-            NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
-        );
-        let stream = HttpStream::new(self.client.clone(), url.parse()?).await?;
-
-        let reader = StreamDownload::from_stream(stream, adaptive_storage, settings).await?;
-
-        sink.append(rodio::Decoder::new(reader)?);
-        sink.play();
-        Ok(())
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -154,94 +133,6 @@ pub async fn music_for_programming() -> Result<Vec<Episode>, Box<dyn Error>> {
 
     Ok(episodes)
 }
-
-pub async fn stream_episode(app: &mut App, url: &String) -> Result<(), Box<dyn Error>> {
-    let (_stream, handle) = OutputStream::try_default()?;
-    let sink = Sink::try_new(&handle)?;
-    let prefetch_bytes = 192 / 8 * 1024 * 10;
-    let settings = Settings::default().prefetch_bytes(prefetch_bytes);
-    let adaptive_storage = AdaptiveStorageProvider::new(
-        MemoryStorageProvider,
-        NonZeroUsize::new((settings.get_prefetch_bytes() * 2) as usize).unwrap(),
-    );
-    let stream = HttpStream::new(app.client.clone(), url.parse()?).await?;
-
-    let mut reader =
-        StreamDownload::new::<HttpStream<Client>>(url.parse()?, adaptive_storage, settings).await?;
-
-    let mut buf = Vec::new();
-
-    reader.read_to_end(&mut buf)?;
-    sink.append(rodio::Decoder::new(reader)?);
-
-    let handle = tokio::task::spawn_blocking(move || {
-        sink.sleep_until_end();
-    });
-    handle.await?;
-    Ok(())
-}
-
-// pub async fn download_episodes(app: &App) -> Result<(), Error> {
-//     let mut home_dir = dirs::home_dir().context("Could not find home directory")?;
-//     home_dir.push(".config");
-//     home_dir.push("music-for-programming");
-
-//     create_dir(&home_dir)
-//         .await
-//         .context("Failed to create directory")?;
-
-//     let mut file = File::create(home_dir.clone())
-//         .await
-//         .context("Failed to create file")?;
-//     for i in app.episodes.clone() {
-//         let resp = reqwest::get(i.audio_url)
-//             .await
-//             .context("Failed to Get from '{url}'")?;
-//         let mut stream = resp.bytes_stream();
-//         while let Ok(Some(chunk)) = stream.try_next().await {
-//             let mut split_title = i.title.splitn(2, ":");
-//             let episode_number = split_title.next().unwrap();
-//             let episode_title = split_title.next().unwrap();
-//             home_dir.push(format!("{}_{}.mp3", episode_number, episode_title));
-//             // let audio_chunk = chunk?;
-//             file.write_all(&chunk)
-//                 .await
-//                 .context("Error while writing to file");
-//         }
-//         home_dir.pop();
-//     }
-
-//     Ok(())
-// }
-
-#[derive(Debug, Default)]
-struct EpisodeListState {
-    episodes: Vec<Episode>,
-    loading_state: LoadingState,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-enum LoadingState {
-    #[default]
-    Idle,
-    Loading,
-    Loaded,
-    Error(String),
-}
-#[derive(Debug, Clone, Default)]
-struct EpisodeListWidget {
-    state: Arc<RwLock<EpisodeListState>>,
-}
-
-pub fn cursor_stream(url: String) {
-    let response = reqwest::blocking::get(url).unwrap();
-    let mut cursor = Cursor::new(response.bytes().unwrap());
-    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-    let source = rodio::Decoder::new(cursor).unwrap();
-    stream_handle.play_raw(source.convert_samples());
-    std::thread::sleep(std::time::Duration::from_secs(600));
-}
-
 
 pub async fn stream_and_play(url: &str) -> AnyResult<()> {
     let (tx, mut rx) = mpsc::channel(1024);
