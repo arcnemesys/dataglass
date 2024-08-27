@@ -52,7 +52,6 @@ impl<B: Backend> Tui<B> {
     pub fn draw(&mut self, app: &mut App) -> AppResult<()> {
         self.terminal.draw(|frame| ui::render(app, frame))?;
 
-        // we need rx_m here, which means we need mpsc.
         Ok(())
     }
 

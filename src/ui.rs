@@ -16,7 +16,6 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph, Wrap},
     Frame,
 };
-use ratatui_image::{Resize, thread::ThreadImage};
 use std::sync::Arc;
 
 const BACKGROUND: Color = STONE.c400;
@@ -143,8 +142,6 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             .pub_date
             .clone(),
     );
-    let image = ThreadImage::default().resize(Resize::Fit(None));
-    let ep_info_img = Block::default();
     let ep_info = Paragraph::new(Text::styled(episode_information, Color::Rgb(175, 196, 219)))
         .block(ep_info_block);
 
@@ -203,7 +200,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     frame.render_widget(about_mfp, left_layout[1]);
     frame.render_widget(mfp_credits, left_layout[2]);
     frame.render_widget(ep_title, middle_layout[0]);
-    frame.render_stateful_widget(image, middle_layout[1], &mut app.async_state);
+    frame.render_stateful_widget(ep_info, middle_layout[1]);
     frame.render_widget(play_status_bar, middle_layout[2]);
     frame.render_widget(search_bar, right_layout[0]);
     frame.render_stateful_widget(episode_list, right_layout[1], &mut app.episode_list_state);
