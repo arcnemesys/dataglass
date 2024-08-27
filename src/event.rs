@@ -1,11 +1,15 @@
 use crate::app::AppResult;
+use image::Rgb;
 use ratatui::crossterm::event::{
     self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent,
 };
-use std::sync::mpsc;
+use ratatui_image::{Resize, picker::Picker, protocol::StatefulProtocol};
+use std::sync::{
+    mpsc,
+};
+use ratatui::prelude::Rect;
 use std::thread;
 use std::time::{Duration, Instant};
-
 /// Terminal events.
 #[derive(Clone, Copy, Debug)]
 pub enum Event {
@@ -15,6 +19,10 @@ pub enum Event {
     Mouse(MouseEvent),
     /// Terminal resize.
     Resize(u16, u16),
+}
+
+pub enum AppEvent {
+    Redraw(Box<dyn StatefulProtocol>)
 }
 
 /// Terminal event handler.
@@ -33,6 +41,15 @@ impl EventHandler {
     /// Constructs a new instance of [`EventHandler`].
     pub fn new(tick_rate: u64) -> Self {
         let (sender, receiver) = mpsc::channel();
+        let (tx_w, rx_w) = mpsc::channel::<(Box<dyn StatefulProtocol>, Resize, Rect)>();
+        let (tx_m, rx_m) = mpsc::channel();
+        let tx_m_render = tx_m.clone();
+        thread::spawn(move || loop {
+            if let Ok((mut protocol, resize, area)) = rx_w.recv() {
+                protocol.resize_encode(&resize, None, area);
+                tx_m_render.send(AppEvent::Redraw(protocol)).unwrap();
+            }
+        });
         let handler = {
             let sender = sender.clone();
             thread::spawn(move || loop {

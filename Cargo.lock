@@ -569,6 +569,7 @@ dependencies = [
  "dirs",
  "futures",
  "futures-util",
+ "image",
  "ratatui",
  "ratatui-image",
  "reqwest",

@@ -1,15 +1,21 @@
 #![allow(unused)]
 use dataglass::app::{music_for_programming, App};
-use dataglass::event::{Event, EventHandler};
+use dataglass::event::{Event, AppEvent, EventHandler};
 use dataglass::handler::handle_key_events;
 use dataglass::tui::Tui;
+use image::Rgb;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use ratatui_image::thread::ThreadProtocol;
+use ratatui_image::{picker::Picker, protocol::StatefulProtocol};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::io;
-use std::sync::{Arc, RwLock};
-
+use std::sync::{
+    mpsc::{self},
+    Arc, RwLock,
+};
+use std::thead;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new();
@@ -21,13 +27,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let events = EventHandler::new(250);
     let mut tui = Tui::new(terminal, events);
     tui.init()?;
-
+    let mut picker = Picker::from_termios()?;
+    picker.guess_protocol();
+    picker.background_color = Some(Rgb::<u8>([255, 0, 255]));
+    let dyn_image = image::io::Reader::open("./assets/mfp.jpg");
+    let (tx_w, rx_w) = mpsc::channel::<(Box<dyn StatefulProtocol>, Resize, Rect)>();
+    app.async_state = ThreadProtocol::new(tx_w, picker.new_resize_protocol(dyn_image));
     while app.running {
         tui.draw(&mut app)?;
         match tui.events.next()? {
             Event::Key(key_event) => handle_key_events(key_event, &mut app).await?,
             Event::Mouse(_) => {}
             Event::Resize(_, _) => {}
+            AppEvent::Redraw(protocol) => {
+                app.async_state.set_protocol(protocol);
+            }
         }
     }
 

@@ -1,14 +1,16 @@
+use anyhow::Result as AnyResult;
 use futures::{StreamExt, TryStream, TryStreamExt};
 use ratatui::widgets::ListState;
+use ratatui::prelude::Rect;
 use reqwest::get;
-use rodio::{DeviceTrait, Decoder, OutputStream, Sink, Source};
+use rodio::{Decoder, DeviceTrait, OutputStream, Sink, Source};
 use rss::Channel;
 use std::{
     error::Error,
+    io::{Cursor, Read, Write},
     num::NonZeroUsize,
-    sync::{Arc, RwLock},
+    sync::{Arc, RwLock, mpsc as std_mpsc},
     time::Duration,
-    io::{Write, Read, Cursor}
 };
 use stream_download::{
     http::{reqwest::Client, HttpStream},
@@ -16,10 +18,11 @@ use stream_download::{
     storage::{adaptive::AdaptiveStorageProvider, memory::MemoryStorageProvider, StorageProvider},
     Settings, StreamDownload, StreamState,
 };
-use anyhow::Result as AnyResult;
-use tokio::sync::mpsc;
+use image::{DynamicImage, Rgb};
 use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
+use tokio::sync::mpsc;
+use ratatui_image::{Resize, picker::Picker, protocol::StatefulProtocol, thread::ThreadProtocol};
 pub type AppResult<T> = Result<T, Box<dyn Error>>;
 
 #[derive(Debug, Clone)]
@@ -33,7 +36,6 @@ pub struct Episode {
     pub link: String,
 }
 
-#[derive(Debug, Clone)]
 pub struct App {
     pub episodes: Arc<RwLock<Vec<Episode>>>,
     pub current_track: Option<Episode>,
@@ -44,6 +46,7 @@ pub struct App {
     pub running: bool,
     pub client: Client,
     pub selected_list: SelectedList,
+    pub async_state: ThreadProtocol,
 }
 
 #[derive(Clone, Debug)]
@@ -58,6 +61,11 @@ impl App {
         let mut menu_list_state = ListState::default();
         menu_list_state.select(Some(0));
         let client = Client::new();
+        let (tx_w, rx_w) = std_mpsc::channel::<(Box<dyn StatefulProtocol>, Resize, Rect)>();
+            let mut picker = Picker::from_termios().unwrap();
+    picker.guess_protocol();
+    picker.background_color = Some(Rgb::<u8>([255, 0, 255]));
+let dyn_img = dynamic_image().unwrap();
 
         Self {
             episodes: Arc::new(RwLock::new(Vec::new())),
@@ -69,12 +77,12 @@ impl App {
             running: true,
             client,
             selected_list: SelectedList::Episodes,
+            async_state: ThreadProtocol::new(tx_w, picker.new_resize_protocol(dyn_img.expect("Failed to load image"))),
         }
     }
     pub fn quit(&mut self) {
         self.running = false;
     }
-
 }
 
 #[derive(Debug, Clone)]
@@ -164,7 +172,7 @@ pub async fn stream_and_play(url: &str) -> AnyResult<()> {
             while let Some(chunk) = rx.recv().await {
                 buffer.extend_from_slice(&chunk);
 
-                if buffer.len() > 1024 * 64 {
+                if buffer.len() > 1024 * 256 {
                     if let Ok(source) = Decoder::new(Cursor::new(buffer.clone())) {
                         sink.append(source);
                         buffer.clear();
@@ -180,6 +188,9 @@ pub async fn stream_and_play(url: &str) -> AnyResult<()> {
     Ok(())
 }
 
-
 // tokio::signal::ctrl_c().await?;
-
+//
+pub fn dynamic_image() -> Result<DynamicImage, Box<dyn Error>> {
+    let dyn_img = image::io::Reader::open("./assets/mfp.jpg")?.decode()?;
+    Ok(dyn_img)
+}

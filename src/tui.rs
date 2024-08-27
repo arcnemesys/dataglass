@@ -7,7 +7,6 @@ use ratatui::crossterm::terminal::{self, EnterAlternateScreen, LeaveAlternateScr
 use ratatui::Terminal;
 use std::io;
 use std::panic;
-
 /// Representation of a terminal user interface.
 ///
 /// It is responsible for setting up the terminal,
@@ -52,6 +51,8 @@ impl<B: Backend> Tui<B> {
     /// [`rendering`]: crate::ui::render
     pub fn draw(&mut self, app: &mut App) -> AppResult<()> {
         self.terminal.draw(|frame| ui::render(app, frame))?;
+
+        // we need rx_m here, which means we need mpsc.
         Ok(())
     }
 
