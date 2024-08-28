@@ -16,6 +16,8 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, List, ListItem, Paragraph, Wrap},
     Frame,
 };
+use ratatui::prelude::{Style as PStyle, Stylize as PStylize}
+use tui_big_text::{BigText, PixelSize};
 use std::sync::Arc;
 
 const BACKGROUND: Color = STONE.c400;
@@ -116,6 +118,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     let mut split_title = full_episode_title.splitn(2, ":");
     let episode_number = split_title.next().unwrap();
     let episode_title = split_title.next().unwrap();
+
     let ep_title_block = Block::default()
         .title_top(episode_number)
         .title_alignment(Alignment::Center)
@@ -133,6 +136,13 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .borders(Borders::ALL)
         .border_set(ROUNDED)
         .style(Style::default().fg(Color::Rgb(175, 196, 219)));
+
+    let ep_big_text = BigText::builder()
+        .pixel_size(PixelSize::Quadrant)
+        .style(PStyle::new().blue())
+        .lines(vec![
+            "String".into()
+        ]).build();
     let episode_information = format!(
         "Duration: {}\nRelease Date: {}",
         episodes_clone.read().unwrap()[app.selected_episode]
@@ -177,7 +187,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
         .title_alignment(Alignment::Center)
         .title_style(THEME.title)
         .border_set(ROUNDED)
-        .borders(Borders::TOP | Borders::RIGHT | Borders::BOTTOM)
+        .borders(Borders::ALL)
         .style(Style::default().fg(Color::Rgb(175, 196, 219)));
 
     let mut episode_list_items: Vec<_> = Vec::new();
@@ -200,7 +210,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
     frame.render_widget(about_mfp, left_layout[1]);
     frame.render_widget(mfp_credits, left_layout[2]);
     frame.render_widget(ep_title, middle_layout[0]);
-    frame.render_stateful_widget(ep_info, middle_layout[1]);
+    frame.render_widget(ep_big_text, middle_layout[1]);
     frame.render_widget(play_status_bar, middle_layout[2]);
     frame.render_widget(search_bar, right_layout[0]);
     frame.render_stateful_widget(episode_list, right_layout[1], &mut app.episode_list_state);

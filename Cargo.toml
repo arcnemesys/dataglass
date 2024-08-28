@@ -21,3 +21,5 @@ anyhow = "1.0.86"
 futures-util = "0.3.30"
 color-eyre = "0.6.3"
 image = { version = "0.25.2", features = ["jpeg"] }
+tui-big-text = "0.6.0"
+throbber-widgets-tui = "0.7.0"

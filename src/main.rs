@@ -1,6 +1,6 @@
 #![allow(unused)]
 use dataglass::app::{music_for_programming, App};
-use dataglass::event::{Event, AppEvent, EventHandler};
+use dataglass::event::{Event, EventHandler};
 use dataglass::handler::handle_key_events;
 use dataglass::tui::Tui;
 use image::Rgb;
@@ -13,7 +13,7 @@ use std::sync::{
     mpsc::{self},
     Arc, RwLock,
 };
-use std::thead;
+use std::thread;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut app = App::new();

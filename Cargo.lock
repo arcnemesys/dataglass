@@ -394,6 +394,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "compact_str"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6050c3a16ddab2e412160b31f2c871015704239bca62f72f6e5f0be631d3f644"
+dependencies = [
+ "castaway",
+ "cfg-if",
+ "itoa",
+ "rustversion",
+ "ryu",
+ "static_assertions",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -504,6 +518,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossterm"
+version = "0.28.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "829d955a0bb380ef178a640b91779e3987da38c9aea133b20614cfed8cdea9c6"
+dependencies = [
+ "bitflags 2.6.0",
+ "crossterm_winapi",
+ "mio 1.0.1",
+ "parking_lot",
+ "rustix",
+ "signal-hook",
+ "signal-hook-mio",
+ "winapi",
+]
+
+[[package]]
 name = "crossterm_winapi"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -565,12 +595,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "color-eyre",
- "crossterm",
+ "crossterm 0.27.0",
  "dirs",
  "futures",
  "futures-util",
  "image",
- "ratatui",
+ "ratatui 0.27.0",
  "ratatui-image",
  "reqwest",
  "rodio",
@@ -578,7 +608,9 @@ dependencies = [
  "serde",
  "stream-download",
  "tachyonfx",
+ "throbber-widgets-tui",
  "tokio",
+ "tui-big-text",
  "tui-scrollview",
 ]
 
@@ -777,6 +809,12 @@ name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
+
+[[package]]
+name = "font8x8"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "875488b8711a968268c7cf5d139578713097ca4635a76044e8fe8eedf831d07e"
 
 [[package]]
 name = "foreign-types"
@@ -1184,6 +1222,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b248f5224d1d606005e02c97f5aa4e88eeb230488bcc03bc9ca4d7991399f2b5"
 
 [[package]]
+name = "instability"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b23a0c8dfe501baac4adf6ebbfa6eddf8f0c07f56b058cc1288017e32397846c"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "interpolate_name"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1448,6 +1496,7 @@ checksum = "4569e456d394deccd22ce1c1913e6ea0e54519f577285001215d33557431afe4"
 dependencies = [
  "hermit-abi",
  "libc",
+ "log",
  "wasi",
  "windows-sys 0.52.0",
 ]
@@ -1910,12 +1959,33 @@ checksum = "d16546c5b5962abf8ce6e2881e722b4e0ae3b6f1a08a26ae3573c55853ca68d3"
 dependencies = [
  "bitflags 2.6.0",
  "cassowary",
- "compact_str",
- "crossterm",
+ "compact_str 0.7.1",
+ "crossterm 0.27.0",
  "itertools 0.13.0",
  "lru",
  "paste",
  "stability",
+ "strum",
+ "strum_macros",
+ "unicode-segmentation",
+ "unicode-truncate",
+ "unicode-width",
+]
+
+[[package]]
+name = "ratatui"
+version = "0.28.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdef7f9be5c0122f890d58bdf4d964349ba6a6161f705907526d891efabba57d"
+dependencies = [
+ "bitflags 2.6.0",
+ "cassowary",
+ "compact_str 0.8.0",
+ "crossterm 0.28.1",
+ "instability",
+ "itertools 0.13.0",
+ "lru",
+ "paste",
  "strum",
  "strum_macros",
  "unicode-segmentation",
@@ -1934,7 +2004,7 @@ dependencies = [
  "icy_sixel",
  "image",
  "rand",
- "ratatui",
+ "ratatui 0.27.0",
  "rustix",
 ]
 
@@ -2413,6 +2483,7 @@ checksum = "34db1a06d485c9142248b7a054f034b349b212551f3dfd19c94d45a754a217cd"
 dependencies = [
  "libc",
  "mio 0.8.11",
+ "mio 1.0.1",
  "signal-hook",
 ]
 
@@ -2659,7 +2730,7 @@ dependencies = [
  "colorsys",
  "derive_builder",
  "rand",
- "ratatui",
+ "ratatui 0.27.0",
  "simple-easing",
 ]
 
@@ -2716,6 +2787,16 @@ checksum = "8b9ef9bad013ada3808854ceac7b46812a6465ba368859a37e2100283d2d719c"
 dependencies = [
  "cfg-if",
  "once_cell",
+]
+
+[[package]]
+name = "throbber-widgets-tui"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fad9e055cadd9da8b4a67662b962e3e67e96af491ae9cec7e88aaff92e7c3666"
+dependencies = [
+ "rand",
+ "ratatui 0.28.1",
 ]
 
 [[package]]
@@ -2939,13 +3020,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "tui-big-text"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "399b145b30537641e56878b64bf648e04e1df996efb5d32cd7f19944152e3868"
+dependencies = [
+ "derive_builder",
+ "font8x8",
+ "itertools 0.13.0",
+ "ratatui 0.28.1",
+]
+
+[[package]]
 name = "tui-scrollview"
 version = "0.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27c5097e5278f3222bfcdd236bf3e81a98fd76be956093e2cc760be5cde1177b"
 dependencies = [
  "indoc",
- "ratatui",
+ "ratatui 0.27.0",
  "rstest",
 ]
 
