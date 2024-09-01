@@ -3,7 +3,6 @@ use dataglass::app::{music_for_programming, App};
 use dataglass::event::{Event, EventHandler};
 use dataglass::handler::handle_key_events;
 use dataglass::tui::Tui;
-use image::Rgb;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use serde::{Deserialize, Serialize};

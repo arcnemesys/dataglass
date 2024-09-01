@@ -1,5 +1,4 @@
 use crate::app::AppResult;
-use image::Rgb;
 use ratatui::crossterm::event::{
     self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent,
 };

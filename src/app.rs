@@ -22,7 +22,8 @@ use tokio::fs::{create_dir_all, File};
 use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
 pub type AppResult<T> = Result<T, Box<dyn Error>>;
-
+const BUFFER_SIZE: usize = 1024 * 512;
+const SLEEP_DURATION: Duration = Duration::from_millis(5);
 #[derive(Debug, Clone)]
 pub struct Episode {
     pub title: String,
@@ -151,30 +152,41 @@ pub async fn stream_and_play(url: &str) -> AnyResult<()> {
         anyhow::Ok(())
     });
 
+    let (decode_tx, mut decode_rx) = mpsc::channel(32);
+
+    std::thread::spawn(move || -> AnyResult<()> {
+        let rt = tokio::runtime::Runtime::new()?;
+
+        rt.block_on(async {
+            let mut buffer = Vec::new();
+            while let Some(chunk) = rx.recv().await {
+                buffer.extend_from_slice(&chunk);
+                if buffer.len() >= BUFFER_SIZE {
+                    if let Ok(source) = Decoder::new(Cursor::new(buffer.clone())) {
+                        let _ = decode_tx.send(source.convert_samples::<f32>().buffered()).await;
+                    }
+                    buffer.clear();
+                }
+            }
+        });
+        Ok(())
+    });
+
     std::thread::spawn(move || -> AnyResult<()> {
         let (_stream, stream_handle) = OutputStream::try_default()?;
         let sink = Sink::try_new(&stream_handle)?;
 
-        let mut buffer = Vec::new();
-
         let rt = tokio::runtime::Runtime::new()?;
-
-        rt.block_on(async {
-            while let Some(chunk) = rx.recv().await {
-                buffer.extend_from_slice(&chunk);
-
-                if buffer.len() > 1024 * 256 {
-                    if let Ok(source) = Decoder::new(Cursor::new(buffer.clone())) {
-                        sink.append(source);
-                        buffer.clear();
-                    }
+            rt.block_on(async {
+                while let Some(source) = decode_rx.recv().await {
+                    sink.append(source);
+                    tokio::time::sleep(SLEEP_DURATION).await;
                 }
-            }
-        });
+            });
 
-        sink.sleep_until_end();
-        Ok(())
-    });
+            sink.sleep_until_end();
+            Ok(())
+        });
 
     Ok(())
 }

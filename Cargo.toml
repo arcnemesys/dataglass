@@ -5,14 +5,13 @@ edition = "2021"
 
 [dependencies]
 ratatui = "0.27.0"
-rodio = "0.19.0"
+rodio = { version = "0.19.0", default-features = false, features = ["symphonia-all"] }
 reqwest = { version = "0.12.5", features = ["blocking", "stream"] }
 crossterm = { version = "0.27.0", features = ["event-stream"] }
 serde = { version = "1.0.204", features = ["derive"] }
 tokio = { version = "1.38.0", features = ["full"] }
 rss = "2.0.8"
 stream-download = "0.7.1"
-ratatui-image = "1.0.5"
 tui-scrollview = "0.3.12"
 tachyonfx = "0.4.0"
 futures = "0.3.30"
@@ -20,6 +19,3 @@ dirs = "5.0.1"
 anyhow = "1.0.86"
 futures-util = "0.3.30"
 color-eyre = "0.6.3"
-image = { version = "0.25.2", features = ["jpeg"] }
-tui-big-text = "0.6.0"
-throbber-widgets-tui = "0.7.0"
